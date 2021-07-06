@@ -1,7 +1,7 @@
 <template>
 <div>
   <v-sparkline
-    :value="slumpGraf"
+    :value="value"
     :gradient="gradient"
     :smooth="radius || false"
     :padding="padding"
@@ -41,9 +41,9 @@
       type: 'trend',
       autoLineWidth: false,
     }),
-    props:{
-      slumpGraf: Array
-    },
+    mounted() {
+      this.value = this.$store.state.slumpGraf
+    }
     
   }
 </script>

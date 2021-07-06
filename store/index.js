@@ -81,7 +81,6 @@ export const mutations = {
     state.datasCounter[2]['count'] += n
     state.pay = n
     state.coin.out += n
-    console.log(state.slumpGraf)
   },
   //ボーナスカウント上げる
   bigCountUp(state) {
@@ -94,7 +93,7 @@ export const mutations = {
   //1kボタンのdisable解除
   add1kBtnRelease(state) {
     state.add1kDisable = false
-  }
+  },
 }
 
 export const actions = {

@@ -2,7 +2,7 @@
   <div class="container">
     <div class="top">
       <SlotDatas />
-      <SlotHistory :slumpGraf="slumpGraf" />
+      <SlotHistory  />
     </div>
     <SlotNuxt class="nuxtLogo" />
     <div class="main">
@@ -88,7 +88,7 @@ export default {
         four:{bb: 6,suika: 14,cherry: 22,replay: 30,bell: 127,pb: 10,},
         five:{bb: 7,suika: 15,cherry: 23,replay: 31,bell: 127,pb: 11,},
         six:{bb: 8,suika: 16,cherry: 24,replay: 32,bell: 127,pb: 12,},
-        ex:{bb: 30,suika: 40,cherry: 48,replay: 56,bell: 127,pb: 16,},
+        ex:{bb: 24,suika: 40,cherry: 48,replay: 56,bell: 127,pb: 16,},
       },
       // AT関連データ
       nuxtime: {
@@ -131,7 +131,7 @@ export default {
         isRedR: [],
       },
       //スランプグラフ用配列
-      slumpGraf: [],
+      // slumpGraf: [],
       //AT引き戻し関連
       pullBack: {
         isPullBack: false,
@@ -459,7 +459,7 @@ export default {
           this.bonusMode.isBonusMode == true &&
           this.nuxtime.stockGameCount > 0 &&
           //nuxtime.musicObjが作られていないのにstopNuxtMusic()をすると
-          //エラーになるので、そうならないように止める処理
+          //エラーになるので、そうならないように止める処理!!
           this.nuxtime.musicObj !== ""
         ) {
           this.stopNuxtMusic();
@@ -469,9 +469,13 @@ export default {
           this.migrationNuxtimeMode();
         }
         //グラフ作成
-        this.$store.commit("addSlumpGraf");
-        this.slumpGraf = this.$store.state.slumpGraf;
+        this.createSlumpGraf()
       }
+    },
+    //グラフ作成
+    createSlumpGraf() {
+      this.$store.commit("addSlumpGraf");
+      this.slumpGraf = this.$store.state.slumpGraf;
     },
     //払い出し効果音
     payOutSE(){
@@ -479,7 +483,7 @@ export default {
       payOutSE.preload = "auto"
       payOutSE.src = "music/payout.mp3"
       payOutSE.load()
-      payOutSE.volume = 0.007
+      payOutSE.volume = 0.01
       payOutSE.play()
     },
     //7揃い効果音
@@ -500,6 +504,15 @@ export default {
       nuxtSE.volume = 0.05;
       nuxtSE.play();
       console.log(nuxtSE);
+    },
+    //bet時の効果音
+    betSE() {
+      var payOutSE = new Audio()
+      payOutSE.preload = "auto"
+      payOutSE.src = "music/bet.mp3"
+      payOutSE.load()
+      payOutSE.volume = 0.03
+      payOutSE.play()
     },
     //nuxt揃い時
     migrationNuxtimeMode() {
@@ -544,6 +557,7 @@ export default {
       if (this.$store.state.datasCounter[2]["count"] < 3) {
         return;
       }
+      this.betSE()
       this.$store.commit("decreaseCredit");
       this.isDisabledStart = false;
       this.isDisabledBet = true;
@@ -566,6 +580,9 @@ export default {
       this.nuxtime.assistLamp = true;
     },
   },
+  mounted() {
+    this.createSlumpGraf()
+  }
 };
 </script>
 
