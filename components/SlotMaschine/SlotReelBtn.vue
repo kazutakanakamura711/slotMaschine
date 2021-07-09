@@ -78,7 +78,6 @@ export default {
   mounted() {
     // 初期画面
     this.reelImg = this.imgs[0];
-    console.log(this.btnName);
   },
 };
 </script>

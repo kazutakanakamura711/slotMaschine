@@ -1,9 +1,13 @@
 <template>
+<div>
   <div v-show="show">
-    BonusGame!!:
+    BBGame:
     {{ currentGame }}-{{ playG }}
-  
   </div>
+  <div v-show="!show">
+    BBGame:none
+  </div>
+</div>
 </template>
 
 <script>
@@ -21,6 +25,6 @@ export default {
 <style scoped>
 div {
   color: aqua;
-  margin: 1rem;
+  /* margin: 1rem; */
   }
 </style>

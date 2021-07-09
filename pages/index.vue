@@ -2,9 +2,26 @@
   <div class="container">
     <div class="top">
       <SlotDatas />
-      <SlotHistory  />
+      <SlotHistory />
     </div>
-    <SlotNuxt class="nuxtLogo" />
+    <v-row>
+      <v-col cols="2">
+        <SlotStockGame 
+        :stockGameCount="nuxtime.stockGameCount"
+        :nuxtimeShow="nuxtime.show" />
+      </v-col>
+      <v-col cols="8">
+        <SlotNuxt class="nuxtLogo" />
+      </v-col>
+      <v-col cols="2">
+        <SlotBonusCounter
+          :isBonus="bonus.isBonus"
+          :currentGame="bonusMode.count"
+          :playG="bonus.playG"
+          :show="bonus.show"
+        />
+      </v-col>
+    </v-row>
     <div class="main">
       <SlotReelBtn
         @resetBtn="resetBtn"
@@ -40,17 +57,7 @@
       <SlotStartBtn @start="start" :isDisabledStart="isDisabledStart" />
 
       <SlotBetBtn @bet="bet" :isDisabledBet="isDisabledBet" />
-    <div class="counter" >
-      <SlotStockGame
-        :stockGameCount="nuxtime.stockGameCount"
-      />
-      <SlotBonusCounter
-        :isBonus="bonus.isBonus"
-        :currentGame="bonusMode.count" 
-        :playG="bonus.playG"
-        :show="bonus.show"   
-      />
-    </div>
+      <div class="counter"></div>
     </div>
     <div>
       <div>
@@ -66,7 +73,7 @@
 
 <script>
 export default {
-  layout: 'slot',
+  layout: "slot",
   data() {
     return {
       //リールや停止ボタン関連
@@ -79,16 +86,16 @@ export default {
       isDisabledStopC: true,
       isDisabledStopR: true,
       outCoins: 0,
+      rep: false,
       //抽選確率関連
-      setting:
-      {
-        one:{bb: 3,suika: 11,cherry: 19,replay: 27,bell: 127,pb: 7,},
-        two:{bb: 4,suika: 12,cherry: 20,replay: 28,bell: 127,pb: 8,},
-        three:{bb: 5,suika: 13,cherry: 21,replay: 29,bell: 127,pb: 9,},
-        four:{bb: 6,suika: 14,cherry: 22,replay: 30,bell: 127,pb: 10,},
-        five:{bb: 7,suika: 15,cherry: 23,replay: 31,bell: 127,pb: 11,},
-        six:{bb: 8,suika: 16,cherry: 24,replay: 32,bell: 127,pb: 12,},
-        ex:{bb: 24,suika: 40,cherry: 48,replay: 56,bell: 127,pb: 16,},
+      setting: {
+        one: { bb: 3, suika: 11, cherry: 19, replay: 27, bell: 127, pb: 7 },
+        two: { bb: 4, suika: 12, cherry: 20, replay: 28, bell: 127, pb: 8 },
+        three: { bb: 5, suika: 13, cherry: 21, replay: 29, bell: 127, pb: 9 },
+        four: { bb: 6, suika: 14, cherry: 22, replay: 30, bell: 127, pb: 10 },
+        five: { bb: 7, suika: 15, cherry: 23, replay: 31, bell: 127, pb: 11 },
+        six: { bb: 8, suika: 16, cherry: 24, replay: 32, bell: 127, pb: 12 },
+        ex: { bb: 16, suika: 24, cherry: 32, replay: 44, bell: 127, pb: 16 },
       },
       // AT関連データ
       nuxtime: {
@@ -102,6 +109,7 @@ export default {
         countFlag: false,
         musicFlag: false,
         musicObj: "",
+        show: false,
       },
       //ボーナス関連
       bonus: {
@@ -136,7 +144,7 @@ export default {
       pullBack: {
         isPullBack: false,
         count: 5,
-      }
+      },
     };
   },
   methods: {
@@ -161,7 +169,8 @@ export default {
       }
       if (random < this.setting.ex.replay) {
         this.imgNums = [3, 3, 3];
-        this.outCoins = 3;
+        this.outCoins = 0;
+        this.rep = true
         return this.imgNums;
       }
       if (random < this.setting.ex.bell) {
@@ -271,16 +280,22 @@ export default {
     },
     //引き戻し抽選
     pullBackLottery() {
-      let random = Math.floor(Math.random() * 24)
+      let random = Math.floor(Math.random() * 24);
       if (random < this.setting.ex.pb) {
-        this.pullBack.isPullBack = true
-        this.migrationNuxtimeMode()
-        this.nuxtime.stockGameCount = this.pullBack.count  
+        this.pullBack.isPullBack = true;
+        this.migrationNuxtimeMode();
+        this.nuxtime.stockGameCount = this.pullBack.count;
+      } else {
+        this.nuxtime.show = false
       }
     },
     // リール始動で停止ボタンのdisabledを解除
     //bonus中はnuxt揃い入れる
     start() {
+      //リプレイ成立時用のrepをfalseに
+      if (this.rep == true) {
+        this.rep = false
+      }
       //in枚数カウント
       this.$store.commit("in");
       //レバーオン時のSE
@@ -289,7 +304,7 @@ export default {
       if (this.nuxtime.stockGameCount == 0 && this.nuxtime.isNuxtime) {
         this.nuxtime.assistLamp = false;
         this.nuxtime.isNuxtime = false;
-        this.pullBackLottery()
+        this.pullBackLottery();
       }
       //非ボーナス時かつAT残り有りならAT音楽スタート,ATカウント上げる,ATゲーム数減らす
       if (this.nuxtime.stockGameCount > 0 && !this.bonusMode.isBonusMode) {
@@ -305,7 +320,7 @@ export default {
       //ボーナス中はnuxt揃い高確率に移行の為、抽選が異なるflagLotteryBで抽選
       if (this.bonusMode.isBonusMode && this.bonusMode.count == 0) {
         this.bonusMusic();
-        this.showBonusCounter()
+        this.showBonusCounter();
       }
       if (this.bonusMode.isBonusMode) {
         if (this.bonusMode.count < this.bonus.playG) {
@@ -354,7 +369,7 @@ export default {
     },
     //ボーナスゲームカウンター表示
     showBonusCounter() {
-      this.bonus.show = !this.bonus.show
+      this.bonus.show = !this.bonus.show;
     },
     //ボーナス音楽
     bonusMusic() {
@@ -421,10 +436,9 @@ export default {
         this.stopFlags = [];
         //払い出し有りなら効果音付ける
         if (this.outCoins > 0) {
-          this.payOutSE()
+          this.payOutSE();
         }
         this.outCoins = 0;
-        this.pushOrders.order = [0, 1, 2];
         this.pushOrders.check = [];
         //ボーナス確定時用
         if (this.bonus.flag) {
@@ -443,7 +457,7 @@ export default {
           this.bonus.musicObj.loop = false;
           this.bonus.musicObj.pause();
           this.bonus.musicObj.currentTime = 0;
-          this.showBonusCounter()
+          this.showBonusCounter();
           //AT中のボーナスでnuxt揃いなかった場合はnuxtime.musicFlagにtrueを
           //入れて音楽を流すようにする(nuxt揃い時はnuxtime.musicFlagにtrueが入る)
           if (this.nuxtime.stockGameCount > 0) {
@@ -468,8 +482,14 @@ export default {
         if (this.nuxtime.flag == true) {
           this.migrationNuxtimeMode();
         }
+        //リプレイ成立時用
+        if (this.rep == true) {
+          setTimeout(() => {
+            this.bet()     
+          },500)
+        }
         //グラフ作成
-        this.createSlumpGraf()
+        this.createSlumpGraf();
       }
     },
     //グラフ作成
@@ -478,13 +498,13 @@ export default {
       this.slumpGraf = this.$store.state.slumpGraf;
     },
     //払い出し効果音
-    payOutSE(){
-      var payOutSE = new Audio()
-      payOutSE.preload = "auto"
-      payOutSE.src = "music/payout.mp3"
-      payOutSE.load()
-      payOutSE.volume = 0.01
-      payOutSE.play()
+    payOutSE() {
+      var payOutSE = new Audio();
+      payOutSE.preload = "auto";
+      payOutSE.src = "music/payout.mp3";
+      payOutSE.load();
+      payOutSE.volume = 0.01;
+      payOutSE.play();
     },
     //7揃い効果音
     sevenSE() {
@@ -507,12 +527,12 @@ export default {
     },
     //bet時の効果音
     betSE() {
-      var payOutSE = new Audio()
-      payOutSE.preload = "auto"
-      payOutSE.src = "music/bet.mp3"
-      payOutSE.load()
-      payOutSE.volume = 0.03
-      payOutSE.play()
+      var payOutSE = new Audio();
+      payOutSE.preload = "auto";
+      payOutSE.src = "music/bet.mp3";
+      payOutSE.load();
+      payOutSE.volume = 0.03;
+      payOutSE.play();
     },
     //nuxt揃い時
     migrationNuxtimeMode() {
@@ -523,6 +543,7 @@ export default {
       this.nuxtime.stockGameCount += this.bonus.nuxtimeAddGame;
       this.nuxtime.flag = false;
       this.nuxtime.musicFlag = true;
+      this.nuxtime.show = true
     },
     //リール止めたらassistLamp次を点灯させる
     changeAssistLamp() {
@@ -533,7 +554,6 @@ export default {
     // ベル成立時の押し順判定・失敗時はelse
     pushOrdersJudgment(id) {
       if (id == this.pushOrders.order[0]) {
-        // this.pushOrders.check.push(true);
         this.pushOrders.order.splice(0, 1);
       } else {
         this.imgNums = [0, 2, 5];
@@ -557,7 +577,7 @@ export default {
       if (this.$store.state.datasCounter[2]["count"] < 3) {
         return;
       }
-      this.betSE()
+      this.betSE();
       this.$store.commit("decreaseCredit");
       this.isDisabledStart = false;
       this.isDisabledBet = true;
@@ -581,8 +601,8 @@ export default {
     },
   },
   mounted() {
-    this.createSlumpGraf()
-  }
+    this.createSlumpGraf();
+  },
 };
 </script>
 
@@ -625,12 +645,10 @@ export default {
 }
 
 .nuxtime {
-  /* width: 52%; */
   margin: 0 10% 0 10%;
 }
 
 .bonus {
-  /* width: 100%; */
   margin: 0 10% 0 10%;
 }
 
@@ -642,7 +660,7 @@ export default {
 }
 
 .counter {
-  display: flex;
-  margin-left: 30%;
+  /* display: flex; */
+  margin-left: 40%;
 }
 </style>
