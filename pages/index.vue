@@ -203,8 +203,8 @@ export default {
     },
     //ボーナスの一部で金7の抽選
     goldSevenLottery() {
-      let random = Math.floor(Math.random() * 2);
-      if (random >= 0) {
+      let random = Math.floor(Math.random() * 4);
+      if (random == 0) {
         this.goldSevenSE()
         this.imgNums = [6, 6, 6]
         this.bonus.goldSeven = true
