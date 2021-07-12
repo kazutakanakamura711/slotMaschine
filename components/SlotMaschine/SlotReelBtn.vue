@@ -46,6 +46,7 @@ export default {
         "images/slotBlue.png",
         "images/slotYellow.png",
         "images/slotNuxt.png",
+        "images/slotSevenGold.png",
       ],
       reelImg: "",
       clearId: "",
@@ -64,7 +65,6 @@ export default {
       this.clearId = setInterval(() => {
         let randomImg = this.imgs[Math.floor(Math.random() * this.imgs.length)];
         this.reelImg = randomImg;
-        // console.log(randomImg)
       }, 100);
     },
     // リール停止・親のresetBtnメソッドにidを渡す

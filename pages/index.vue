@@ -6,12 +6,13 @@
     </div>
     <v-row>
       <v-col cols="2">
-        <SlotStockGame 
-        :stockGameCount="nuxtime.stockGameCount"
-        :nuxtimeShow="nuxtime.show" />
+        <SlotStockGame
+          :stockGameCount="nuxtime.stockGameCount"
+          :nuxtimeShow="nuxtime.show"
+        />
       </v-col>
       <v-col cols="8">
-        <SlotNuxt class="nuxtLogo" />
+        <SlotNuxt class="nuxtLogo" :addGame="nuxtime.addGame" />
       </v-col>
       <v-col cols="2">
         <SlotBonusCounter
@@ -87,6 +88,7 @@ export default {
       isDisabledStopR: true,
       outCoins: 0,
       rep: false,
+      freeze: false,
       //抽選確率関連
       setting: {
         one: { bb: 3, suika: 11, cherry: 19, replay: 27, bell: 127, pb: 7 },
@@ -110,6 +112,7 @@ export default {
         musicFlag: false,
         musicObj: "",
         show: false,
+        addGame: 0,
       },
       //ボーナス関連
       bonus: {
@@ -123,6 +126,7 @@ export default {
         nuxtSE: null,
         currentGame: 0,
         show: false,
+        goldSeven: false,
       },
       //押し順
       pushOrders: {
@@ -153,6 +157,7 @@ export default {
       let random = Math.floor(Math.random() * 128);
       if (random <= this.setting.ex.bb) {
         this.imgNums = [0, 0, 0];
+        this.goldSevenLottery()
         this.bonusConfirm();
         this.outCoins = 15;
         return this.imgNums;
@@ -170,7 +175,7 @@ export default {
       if (random < this.setting.ex.replay) {
         this.imgNums = [3, 3, 3];
         this.outCoins = 0;
-        this.rep = true
+        this.rep = true;
         return this.imgNums;
       }
       if (random < this.setting.ex.bell) {
@@ -195,6 +200,26 @@ export default {
         this.outCoins = 0;
         return this.imgNums;
       }
+    },
+    //ボーナスの一部で金7の抽選
+    goldSevenLottery() {
+      let random = Math.floor(Math.random() * 2);
+      if (random >= 0) {
+        this.goldSevenSE()
+        this.imgNums = [6, 6, 6]
+        this.bonus.goldSeven = true
+        this.bonus.playG = 24
+        this.freeze = true
+      }
+    },
+    //金7SE
+    goldSevenSE() {
+      const goldSevenSE = new Audio();
+      goldSevenSE.preload = "auto";
+      goldSevenSE.src = "music/sevenGold.mp3";
+      goldSevenSE.load();
+      goldSevenSE.volume = 0.05;
+      goldSevenSE.play();
     },
     //ベル成立時の押し順の抽選
     bellPushOrdersLottery() {
@@ -285,8 +310,9 @@ export default {
         this.pullBack.isPullBack = true;
         this.migrationNuxtimeMode();
         this.nuxtime.stockGameCount = this.pullBack.count;
+        this.nuxtime.addGame = this.pullBack.count;
       } else {
-        this.nuxtime.show = false
+        this.nuxtime.show = false;
       }
     },
     // リール始動で停止ボタンのdisabledを解除
@@ -294,7 +320,11 @@ export default {
     start() {
       //リプレイ成立時用のrepをfalseに
       if (this.rep == true) {
-        this.rep = false
+        this.rep = false;
+      }
+      //AT上乗せ表示ゲームをクリア
+      if (this.nuxtime.addGame > 0) {
+        this.nuxtime.addGame = 0;
       }
       //in枚数カウント
       this.$store.commit("in");
@@ -371,6 +401,14 @@ export default {
     showBonusCounter() {
       this.bonus.show = !this.bonus.show;
     },
+    //金7ボーナス音楽
+      bonusPremiumMusic() {
+        if (!this.bonus.goldSeven) {
+          return
+        } 
+        this.bonus.musicObj.src = "music/arabu.mp3";
+        this.bonus.goldSeven = false
+      },
     //ボーナス音楽
     bonusMusic() {
       let bonusMusic = new Audio();
@@ -378,10 +416,10 @@ export default {
       this.bonus.musicObj.loop = true;
       this.bonus.musicObj.preload = "auto";
       this.bonus.musicObj.src = "music/first.mp3";
+      this.bonusPremiumMusic()
       this.bonus.musicObj.load();
       this.bonus.musicObj.volume = 0.1;
       this.bonus.musicObj.play();
-      // this.bonus.musicFlag = false;
     },
     // AT音楽停止
     stopNuxtMusic() {
@@ -443,6 +481,9 @@ export default {
         //ボーナス確定時用
         if (this.bonus.flag) {
           let type = "BB";
+          if (this.bonus.goldSeven) {
+            type = "PBB"
+          } 
           this.removeBonus();
           this.migrationBonusMode();
           this.sevenSE();
@@ -457,6 +498,7 @@ export default {
           this.bonus.musicObj.loop = false;
           this.bonus.musicObj.pause();
           this.bonus.musicObj.currentTime = 0;
+          this.bonus.playG = 4
           this.showBonusCounter();
           //AT中のボーナスでnuxt揃いなかった場合はnuxtime.musicFlagにtrueを
           //入れて音楽を流すようにする(nuxt揃い時はnuxtime.musicFlagにtrueが入る)
@@ -485,8 +527,8 @@ export default {
         //リプレイ成立時用
         if (this.rep == true) {
           setTimeout(() => {
-            this.bet()     
-          },500)
+            this.bet();
+          }, 500);
         }
         //グラフ作成
         this.createSlumpGraf();
@@ -523,7 +565,6 @@ export default {
       nuxtSE.load();
       nuxtSE.volume = 0.05;
       nuxtSE.play();
-      console.log(nuxtSE);
     },
     //bet時の効果音
     betSE() {
@@ -541,9 +582,10 @@ export default {
       this.nuxtime.assistLamp = true;
       this.nuxtime.isNuxtime = true;
       this.nuxtime.stockGameCount += this.bonus.nuxtimeAddGame;
+      this.nuxtime.addGame = this.bonus.nuxtimeAddGame;
       this.nuxtime.flag = false;
       this.nuxtime.musicFlag = true;
-      this.nuxtime.show = true
+      this.nuxtime.show = true;
     },
     //リール止めたらassistLamp次を点灯させる
     changeAssistLamp() {
