@@ -5,7 +5,7 @@
     </div>
     <transition name="transit">
       <div v-show="addGame">
-        <v-alert color="yellow">+{{ addGame }}G</v-alert>
+        <v-alert color="yellow">+{{ addGame }}Game</v-alert>
       </div>
     </transition>
   </div>
