@@ -470,7 +470,7 @@ export default {
       ) {
         this.$store.commit("payOut", this.outCoins);
         this.creditStockCheck();
-        this.isDisabledBet = !this.isDisabledBet;
+        this.isDisabledBet = false
         this.stopFlags = [];
         //払い出し有りなら効果音付ける
         if (this.outCoins > 0) {
@@ -530,6 +530,13 @@ export default {
             this.bet();
           }, 500);
         }
+        if (this.freeze) {
+          this.isDisabledBet = true
+          setTimeout(()=>{
+            this.isDisabledBet = false
+            this.freeze = false
+          },7000)
+        }
         //グラフ作成
         this.createSlumpGraf();
       }
@@ -553,6 +560,9 @@ export default {
       var sevenSE = new Audio();
       sevenSE.preload = "auto";
       sevenSE.src = "music/seven.mp3";
+      if (this.freeze) {
+        sevenSE.src = "music/freeze.mp3";
+      }
       sevenSE.load();
       sevenSE.volume = 0.05;
       sevenSE.play();
